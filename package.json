@@ -1,0 +1,10 @@
+{
+  "name": "infly-seo-workspace",
+  "private": true,
+  "version": "2.3.0",
+  "engines": {"node": "22.x"},
+  "dependencies": {
+    "@sparticuz/chromium": "^141.0.0",
+    "puppeteer-core": "^24.28.0"
+  }
+}
