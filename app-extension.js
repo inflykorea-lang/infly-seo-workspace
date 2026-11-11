@@ -124,7 +124,7 @@ async function bulkSave(){
   const title=$('bulk-title-'+i).value.trim();if(!title)throw Error((i+1)+'번째 콘텐츠 제목을 입력하세요.');
   let names=[...new Set($('bulk-keywords-'+i).value.split(/[,\n]/).map(function(x){return x.trim()}).filter(Boolean))];if(!names.length)names=localCandidates(title).slice(0,3);
   const details=new Map(d.keywords.map(function(k){return[k.name,k]})),stamp=kstInput().slice(0,10);
-  items.push({id:uid(),projectId:projectId,channel:d.channel,titleKo:title,titleEn:'',author:$('bulk-author-'+i).value.trim(),url:d.url,publishedAt:isoKst($('bulk-date-'+i).value),mode:mode,device:device,keywords:names.slice(0,30).map(function(name){const v=details.get(name)||{};return{id:uid(),name:name,pc:v.pc??null,mobile:v.mobile??null,source:v.source||'',volumeDate:v.total!=null?stamp:''}}),internalNote:'',demo:false});
+  items.push({id:uid(),projectId:projectId,channel:d.channel,titleKo:title,titleEn:'',author:$('bulk-author-'+i).value.trim(),url:d.url,publishedAt:isoKst($('bulk-date-'+i).value),registeredAt:new Date().toISOString(),mode:mode,device:device,keywords:names.slice(0,30).map(function(name){const v=details.get(name)||{};return{id:uid(),name:name,pc:v.pc??null,mobile:v.mobile??null,source:v.source||'',volumeDate:v.total!=null?stamp:''}}),internalNote:'',demo:false});
  });
  await commit(function(s){s.contents.push(...items)});$('modal').close();render();toast(items.length+'개 콘텐츠를 한 번에 등록했습니다.');
 }
