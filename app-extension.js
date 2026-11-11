@@ -138,5 +138,61 @@ action=async function(button){
  return baseActionAuto(button);
 };
 
+
+function detectCloudProvider(url){
+ try{
+  const h=new URL(url).hostname.toLowerCase();
+  if(h.includes('drive.google.com'))return'Google Drive';
+  if(h.includes('dropbox.com'))return'Dropbox';
+  if(h.includes('1drv.ms')||h.includes('onedrive.live.com')||h.includes('sharepoint.com'))return'OneDrive / SharePoint';
+  if(h.includes('box.com'))return'Box';
+  return'외부 드라이브';
+ }catch(_){return'외부 드라이브'}
+}
+function cloudDriveModal(){
+ const saved=state.cloudDrive||{name:'',url:''};
+ modalForm('외부 드라이브 링크 연결','Google Drive·Dropbox·OneDrive·Box·SharePoint 또는 기타 웹 드라이브 링크를 저장합니다.',
+  '<div class="form-grid">'+
+   '<div class="field"><label for="f-cloudName">표시 이름</label><input id="f-cloudName" name="cloudName" type="text" maxlength="100" value="'+esc(saved.name||'')+'" placeholder="예: INFLY SEO 백업"></div>'+
+   '<div class="field full"><label for="f-cloudUrl">드라이브 / 폴더 웹 링크 *</label><input id="f-cloudUrl" name="cloudUrl" type="url" required value="'+esc(saved.url||'')+'" placeholder="https://drive.google.com/drive/folders/..."><small>비밀번호·액세스 토큰은 입력하지 마세요.</small></div>'+
+  '</div>'+
+  '<div class="help-block">링크는 저장 위치를 기억하고 바로 여는 용도입니다. 링크만으로 자동 업로드까지 하려면 각 서비스의 OAuth/API 연결이 추가로 필요합니다.</div>',
+  async function(form){
+    const url=String(form.get('cloudUrl')||'').trim();const u=new URL(url);
+    if(!['http:','https:'].includes(u.protocol))throw Error('HTTPS 또는 HTTP 링크를 입력하세요.');
+    const name=String(form.get('cloudName')||'').trim()||detectCloudProvider(url);
+    await commit(function(s){s.cloudDrive={name:name,url:url}});
+    toast(name+' 링크를 저장했습니다.');
+  },
+  '링크 저장',
+  saved.url?'<button type="button" class="btn" data-action="open-cloud-drive">저장 위치 열기</button><button type="button" class="btn" data-action="download-cloud-backup">현재 프로젝트 백업</button>':''
+ );
+}
+function openCloudDrive(){
+ const d=state.cloudDrive;if(!d||!d.url){cloudDriveModal();return}
+ window.open(d.url,'_blank','noopener,noreferrer');
+}
+function downloadCloudBackup(){
+ const p=proj();if(!p){toast('먼저 프로젝트를 선택하세요.');return}
+ const cs=contents(),ids=new Set(cs.map(function(x){return x.id}));
+ const part={version:1,projects:[clone(p)],contents:clone(cs),records:clone(state.records.filter(function(r){return ids.has(r.contentId)})),updatedAt:new Date().toISOString()};
+ download(JSON.stringify(part,null,2),'Infly_'+safeName(p.name)+'.infly.json','application/json');
+ toast('백업 파일을 만들었습니다. 연결한 드라이브에 업로드하세요.');
+}
+const previousActionCloud=action;
+action=async function(button){
+ const a=button.dataset.action;
+ if(a==='cloud-drive'){cloudDriveModal();return}
+ if(a==='open-cloud-drive'){openCloudDrive();return}
+ if(a==='download-cloud-backup'){downloadCloudBackup();return}
+ return previousActionCloud(button);
+};
+function installCloudDriveButton(){
+ const old=document.querySelector('[data-action="save-drive"]');
+ if(old){old.dataset.action='cloud-drive';old.textContent=state.cloudDrive&&state.cloudDrive.url?'외부 드라이브 · '+(state.cloudDrive.name||'연결됨'):'외부 드라이브 연결';}
+}
+const oldRenderCloud=render;
+render=function(){oldRenderCloud();installCloudDriveButton()};
+
 if(typeof render==='function')render();
 })();
