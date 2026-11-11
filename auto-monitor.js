@@ -76,8 +76,5 @@ action=async function(button){
  return prevAction(button);
 };
 
-setTimeout(runDue,5000);
-setInterval(()=>{if(document.visibilityState==='visible')runDue().catch(e=>console.error(e))},60000);
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')runDue().catch(e=>console.error(e))});
-window.INFLY_AUTO={runDue,runNow};
+window.INFLY_AUTO={runNow};
 })();
